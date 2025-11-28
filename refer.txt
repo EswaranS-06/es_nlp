@@ -139,3 +139,62 @@ sample output -> terminal
     ]
   }
 }
+
+
+⭐ COMMAND to RUN the pipeline
+✔ Train ML model (auto-label enabled)
+python main.py --in file --out file --train-ml --auto-label
+
+
+or for ES:
+
+python main.py --in es --out es --train-ml --auto-label
+
+✔ Predict + Update Elasticsearch
+python main.py --in es --out es --predict-ml
+
+
+This will:
+
+Read ONLY logs without ML fields
+
+Score them
+
+Update the original ES documents via bulk update
+
+Skip existing enriched logs
+
+✔ Predict from CSV only
+python main.py --in file --out file --predict-ml
+
+
+curl -X PUT "localhost:9200/nlp_logs" -H 'Content-Type: application/json' -d'
+{
+  "mappings": {
+    "properties": {
+      "@timestamp": { "type": "date" },
+      "hostname": { "type": "keyword" },
+      "process": { "type": "keyword" },
+
+      "raw_message": { "type": "text" },
+      "clean_message": { "type": "text" },
+
+      "char_len": { "type": "integer" },
+      "word_count": { "type": "integer" },
+      "has_ip": { "type": "boolean" },
+      "has_error": { "type": "boolean" },
+      "has_process": { "type": "boolean" },
+      "entity_count": { "type": "integer" },
+
+      "iso_score": { "type": "float" },
+      "lgbm_score": { "type": "float" },
+      "adwin_flag": { "type": "integer" },
+      "fusion_score": { "type": "float" },
+      "is_anomaly": { "type": "integer" }
+    }
+  }
+}
+'
+
+
+curl -X DELETE "localhost:9200/nlp_logs"
