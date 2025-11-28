@@ -1,0 +1,18 @@
+elasticsearch:
+  host: "http://localhost:9200"
+  input_index: "raw_logs"
+  output_index: "nlp_logs"
+  size: 500
+  scroll_timeout: "2m"
+
+input:
+  type: "es"          # es / file
+  file: "parsed_logs.csv"
+
+output:
+  type: "file"        # es / file
+  file: "nlp_output.csv"
+
+nlp:
+  embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+  ner_model: "dslim/bert-base-NER"

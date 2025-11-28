@@ -1,0 +1,141 @@
+⭐ Method B — Inspect some documents
+curl -X GET "http://localhost:9200/raw_logs/_search?size=5&pretty"
+
+
+You will see:
+
+{
+  "_source": {
+    "hostname": "combo",
+    "process": "sshd",
+    "pid": 20892,
+    "user": "root",
+    "rhost": "1.2.3.4",
+    "@timestamp": "2025-06-15T02:04:59Z",
+    "raw_log": "...",
+    "message": "authentication failure; ..."
+  }
+}
+
+
+If fields are extracted → pipeline success is correct.
+
+⭐ Method C — Simulate a log before ingestion (debugging mode)
+
+Use pipeline simulation tool:
+
+curl -X POST "http://localhost:9200/_ingest/pipeline/syslog_pipeline/_simulate?pretty" -H "Content-Type: application/json" -d "
+{
+  \"docs\": [
+    { \"_source\": { \"raw_log\": \"Jun 15 02:04:59 combo sshd[20892]: authentication failure; user=root rhost=1.2.3.4\" } }
+  ]
+}"
+
+
+This shows EXACTLY how ES parsed it:
+
+If GROK failed
+
+If KV extracted user/root correctly
+
+If timestamp was mapped to @timestamp
+
+If fields are correctly flattened
+
+
+sample output -> terminal
+(.venv) C:\Users\eswar\Desktop\es_nlp>curl -X GET "http://localhost:9200/raw_logs/_search?size=5&pretty"
+{
+  "took" : 170,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 1,
+    "successful" : 1,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : {
+      "value" : 50,
+      "relation" : "eq"
+    },
+    "max_score" : 1.0,
+    "hits" : [
+      {
+        "_index" : "raw_logs",
+        "_id" : "4nv2yJoBskWztO19vnht",
+        "_score" : 1.0,
+        "_source" : {
+          "hostname" : "ip-172-31-27-153",
+          "process" : "CRON",
+          "@timestamp" : "2025-11-30T06:39:00.000Z",
+          "ingested_at" : "2025-11-28T05:36:44.368496240Z",
+          "pid" : "21882",
+          "raw_log" : "Nov 30 06:39:00 ip-172-31-27-153 CRON[21882]: pam_unix(cron:session): session closed for user root",
+          "message" : "pam_unix(cron:session): session closed for user root",
+          "timestamp" : "Nov 30 06:39:00"
+        }
+      },
+      {
+        "_index" : "raw_logs",
+        "_id" : "43v2yJoBskWztO19v3hb",
+        "_score" : 1.0,
+        "_source" : {
+          "hostname" : "ip-172-31-27-153",
+          "process" : "CRON",
+          "@timestamp" : "2025-11-30T06:47:01.000Z",
+          "ingested_at" : "2025-11-28T05:36:45.401676122Z",
+          "pid" : "22087",
+          "raw_log" : "Nov 30 06:47:01 ip-172-31-27-153 CRON[22087]: pam_unix(cron:session): session opened for user root by (uid=0)",   
+          "message" : "pam_unix(cron:session): session opened for user root by (uid=0)",
+          "timestamp" : "Nov 30 06:47:01"
+        }
+      },
+      {
+        "_index" : "raw_logs",
+        "_id" : "5Hv2yJoBskWztO19v3h8",
+        "_score" : 1.0,
+        "_source" : {
+          "hostname" : "ip-172-31-27-153",
+          "process" : "CRON",
+          "@timestamp" : "2025-11-30T06:47:03.000Z",
+          "ingested_at" : "2025-11-28T05:36:45.434460722Z",
+          "pid" : "22087",
+          "raw_log" : "Nov 30 06:47:03 ip-172-31-27-153 CRON[22087]: pam_unix(cron:session): session closed for user root",
+          "message" : "pam_unix(cron:session): session closed for user root",
+          "timestamp" : "Nov 30 06:47:03"
+        }
+      },
+      {
+        "_index" : "raw_logs",
+        "_id" : "5Xv2yJoBskWztO19v3iY",
+        "_score" : 1.0,
+        "_source" : {
+          "hostname" : "ip-172-31-27-153",
+          "process" : "sshd",
+          "@timestamp" : "2025-11-30T07:07:14.000Z",
+          "ingested_at" : "2025-11-28T05:36:45.462977812Z",
+          "pid" : "22116",
+          "raw_log" : "Nov 30 07:07:14 ip-172-31-27-153 sshd[22116]: Connection closed by 122.225.103.87 [preauth]",
+          "message" : "Connection closed by 122.225.103.87 [preauth]",
+          "timestamp" : "Nov 30 07:07:14"
+        }
+      },
+      {
+        "_index" : "raw_logs",
+        "_id" : "5nv2yJoBskWztO19v3i3",
+        "_score" : 1.0,
+        "_source" : {
+          "hostname" : "ip-172-31-27-153",
+          "process" : "sshd",
+          "@timestamp" : "2025-11-30T07:07:35.000Z",
+          "ingested_at" : "2025-11-28T05:36:45.493951029Z",
+          "pid" : "22118",
+          "raw_log" : "Nov 30 07:07:35 ip-172-31-27-153 sshd[22118]: Connection closed by 122.225.103.87 [preauth]",
+          "message" : "Connection closed by 122.225.103.87 [preauth]",
+          "timestamp" : "Nov 30 07:07:35"
+        }
+      }
+    ]
+  }
+}

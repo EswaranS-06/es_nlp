@@ -1,0 +1,48 @@
+{
+  "description": "Universal syslog + sshd + PAM log parser (ES 8.x compatible)",
+  "processors": [
+    {
+      "grok": {
+        "field": "raw_log",
+        "patterns": [
+          "%{SYSLOGTIMESTAMP:timestamp} %{HOSTNAME:hostname} %{DATA:process}(?:\\[%{NUMBER:pid}\\])?: %{GREEDYDATA:message}"
+        ],
+        "ignore_missing": true
+      }
+    },
+    {
+      "kv": {
+        "field": "message",
+        "field_split": " ",
+        "value_split": "=",
+        "ignore_missing": true,
+        "ignore_failure": true,
+        "strip_brackets": true,
+        "trim_value": " \t",
+        "trim_key": " \t",
+        "target_field": "kv_fields"
+      }
+    },
+    {
+      "script": {
+        "description": "Flatten kv_fields into root object",
+        "lang": "painless",
+        "source": "if (ctx.containsKey('kv_fields')) { for (def entry : ctx.kv_fields.entrySet()) { ctx[entry.getKey()] = entry.getValue(); } ctx.remove('kv_fields'); }"
+      }
+    },
+    {
+      "date": {
+        "field": "timestamp",
+        "target_field": "@timestamp",
+        "ignore_failure": true,
+        "formats": ["MMM dd HH:mm:ss"]
+      }
+    },
+    {
+      "set": {
+        "field": "ingested_at",
+        "value": "{{_ingest.timestamp}}"
+      }
+    }
+  ]
+}

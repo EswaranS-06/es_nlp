@@ -1,0 +1,7 @@
+requests
+tqdm
+elasticsearch==8.12.1
+sentence-transformers
+transformers
+pandas
+pyyaml
