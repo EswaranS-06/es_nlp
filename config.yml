@@ -1,18 +1,58 @@
+# =========================================
+# Elasticsearch Configuration
+# =========================================
 elasticsearch:
   host: "http://localhost:9200"
+
+  # Input: raw logs coming from ingest pipeline
   input_index: "raw_logs"
+
+  # Output: final enriched logs (embeddings + features + ML scores)
   output_index: "nlp_logs"
-  size: 500
+
+  # Read settings
+  size: 3805
   scroll_timeout: "2m"
 
+# =========================================
+# Input Source
+# =========================================
 input:
-  type: "es"          # es / file
-  file: "parsed_logs.csv"
+  type: "es"                 # es | file
+  file: "parsed_logs.csv"    # used only if input.type = file
 
+# =========================================
+# Output Destination
+# =========================================
 output:
-  type: "file"        # es / file
-  file: "nlp_output.csv"
+  type: "file"               # es | file
+  file: "nlp_output.csv"     # used only if output.type = file
 
+# =========================================
+# NLP Configuration
+# =========================================
 nlp:
+  # Embedding model used in main.py
   embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+
+  # Your existing NER model (not used in pipeline but kept for compatibility)
   ner_model: "dslim/bert-base-NER"
+
+# =========================================
+# Machine Learning Configuration
+# =========================================
+ml:
+  # Threshold for auto-labeling during training
+  auto_label_threshold: 0.8
+
+  # Random seed for deterministic results
+  random_seed: 42
+
+  # Directory where ML models are saved
+  train_output_dir: "models"
+
+  # Internal ML feature configs (optional, but good to include)
+  use_lightgbm: true
+  use_isolation_forest: true
+  use_adwin: true
+  use_fusion_score: true
