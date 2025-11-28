@@ -9,22 +9,24 @@ def load_config():
     with open("config.yml", "r") as f:
         return yaml.safe_load(f)
 
-def send_to_es(raw_line, cfg, pipeline_name):
-    es_url = (
-        f"{cfg['elasticsearch']['host']}/"
-        f"{cfg['elasticsearch']['index']}/_doc"
-        f"?pipeline={pipeline_name}"
+def send_to_es(line, cfg, pipeline):
+    es_host = cfg["elasticsearch"]["host"]
+    index = cfg["elasticsearch"].get("input_index", "raw_logs")  # FIXED
+
+    url = f"{es_host}/{index}/_doc?pipeline={pipeline}"
+
+    response = requests.post(
+        url,
+        headers={"Content-Type": "application/json"},
+        data=json.dumps({"raw_log": line.strip()})
     )
 
-    doc = {"raw_log": raw_line}
+    if response.status_code not in (200, 201):
+        print("Error:", response.text)
+        return False
 
-    res = requests.post(
-        es_url,
-        data=json.dumps(doc),
-        headers={"Content-Type": "application/json"}
-    )
+    return True
 
-    return res.status_code in (200, 201)
 
 def ingest_file(filepath, cfg, pipeline, success, failed):
     with open(filepath, "r", errors="ignore") as f:
